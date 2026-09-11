@@ -35,14 +35,14 @@ interface ComboNode {
 }
 
 const BACKGROUND_COLORS = {
-  blue: '#60a5fa',      // 青系（デフォルトも明るく）
-  orange: '#ff9500',    // オレンジ系（彩度アップ）
-  red: '#ff8787',       // 赤系（より明るく）
-  green: '#69db7c',     // 緑系（より明るく）
-  yellow: '#ffd700',    // 黄色系（彩度アップ）
-  gray: '#ced4da',      // グレー系（より明るく）
-  purple: '#cc9dff',    // 紫系（より明るく）
-  cyan: '#66d9e8',      // シアン系（より明るく）
+  blue: '#60a5fa',
+  orange: '#ff9500',
+  red: '#ff8787',
+  green: '#69db7c',
+  yellow: '#ffd700',
+  gray: '#ced4da',
+  purple: '#cc9dff',
+  cyan: '#66d9e8',
 };
 
 const COMBO_CATEGORIES = [
@@ -229,7 +229,8 @@ export default function ComboEditPage() {
   const loadComboData = async () => {
     setInitialLoading(true);
     try {
-      const { data } = await client.models.Combo.get({ id: comboId }, { authMode: 'apiKey' });
+      // ✅ userPool に変更（自分のコンボを取得するため）
+      const { data } = await client.models.Combo.get({ id: comboId }, { authMode: 'userPool' });
       
       if (!data) {
         alert('コンボが見つかりませんでした');
@@ -503,7 +504,6 @@ export default function ComboEditPage() {
       ? (node.moveName || node.freeText || '未設定')
       : (node.command || node.freeText || '未設定');
     
-    // 背景色とボーダー色を計算
     const baseColor = node.backgroundColor || BACKGROUND_COLORS.blue;
     const rgbMatch = baseColor.match(/^#([A-Fa-f0-9]{6})$/);
     let backgroundColor = 'rgba(59, 130, 246, 0.5)';
@@ -614,6 +614,7 @@ export default function ComboEditPage() {
         nodes: nodesObject 
       };
       
+      // ✅ userPool に変更（Combo モデルは owner 認証が必要）
       await client.models.Combo.update({
         id: comboId,
         character_id: selectedCharacterId,
@@ -626,7 +627,7 @@ export default function ComboEditPage() {
         importance: importance > 0 ? importance : undefined,
         nodes: JSON.stringify(treeData),
         display_mode: displayMode
-      }, { authMode: 'apiKey' });
+      }, { authMode: 'userPool' });
       
       alert('コンボを更新しました!');
       router.push('/combo/list');

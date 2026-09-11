@@ -1,372 +1,51 @@
-/* Authenticator カスタムスタイル */
+/* 文字化けや全角スペースを防ぐため、この行を含めて全て貼り直してください */
 
-/* 全体のコンテナ - 背景を完全透明化 */
 [data-amplify-authenticator] {
   --amplify-colors-background-primary: transparent !important;
-  --amplify-colors-background-secondary: transparent !important;
   --amplify-colors-border-primary: rgba(185, 28, 28, 0.5) !important;
-  --amplify-colors-brand-primary-10: #dc2626 !important;
   --amplify-colors-brand-primary-80: #dc2626 !important;
-  --amplify-colors-brand-primary-90: #991b1b !important;
-  --amplify-colors-brand-primary-100: #7f1d1d !important;
   --amplify-colors-font-primary: #ffffff !important;
-  --amplify-colors-font-secondary: #ffffff !important;
-  --amplify-colors-font-interactive: #ffffff !important;
-  background: transparent !important;
 }
 
-/* メインコンテナ */
-[data-amplify-authenticator] [data-amplify-container] {
-  background: transparent !important;
-  padding: 0 !important;
-}
-
-/* フォームコンテナ */
+/* フォームの外枠 */
 [data-amplify-authenticator] [data-amplify-router] {
-  background: linear-gradient(135deg, #dc2626, #991b1b) !important;
-  padding: 3px !important;
-  border-radius: 12px !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
-  max-width: 480px !important;
-  margin: 60px auto !important;
-}
-
-/* 内側のコンテナ */
-[data-amplify-authenticator] [data-amplify-form] {
   background: rgba(0, 0, 0, 0.95) !important;
-  border-radius: 10px !important;
-  padding: 0 !important;
+  border: 1px solid #dc2626 !important;
+  border-radius: 12px !important;
 }
 
-/* タブコンテナ - 下部の枠線を削除 */
-[data-amplify-authenticator] [data-amplify-tabs] {
-  background: transparent !important;
-  border-bottom: none !important;
-  border: none !important;
-}
-
-/* タブボタン（未選択） - 薄い白色の文字 + 薄い赤色の上部枠線 */
-[data-amplify-authenticator] [data-amplify-tabs-item],
-[data-amplify-authenticator] button[data-amplify-tabs-item],
-[data-amplify-authenticator] [role="tab"] {
-  color: rgba(255, 255, 255, 0.5) !important;
-  font-weight: 600 !important;
-  font-size: 16px !important;
-  padding: 15px 30px !important;
-  border: none !important;
-  border-top: 3px solid rgba(220, 38, 38, 0.5) !important;
-  border-bottom: none !important;
-  border-left: none !important;
-  border-right: none !important;
-  transition: all 0.2s !important;
-  background: transparent !important;
-}
-
-/* タブボタン（選択中） - 真っ白の文字 + 真っ白の上部枠線 + 薄い赤色の背景 */
-[data-amplify-authenticator] [data-amplify-tabs-item][aria-selected="true"],
-[data-amplify-authenticator] button[data-amplify-tabs-item][aria-selected="true"],
-[data-amplify-authenticator] [role="tab"][aria-selected="true"] {
-  color: #ffffff !important;
-  border: none !important;
-  border-top: 3px solid #ffffff !important;
-  border-bottom: none !important;
-  border-left: none !important;
-  border-right: none !important;
-  background: rgba(220, 38, 38, 0.4) !important;
-}
-
-/* タブボタン（ホバー） - 白色の文字 + 薄い赤色 */
-[data-amplify-authenticator] [data-amplify-tabs-item]:hover,
-[data-amplify-authenticator] button[data-amplify-tabs-item]:hover,
-[data-amplify-authenticator] [role="tab"]:hover {
-  color: rgba(255, 255, 255, 0.8) !important;
-  background: rgba(220, 38, 38, 0.2) !important;
-}
-
-/* フォームフィールド */
-[data-amplify-authenticator] [data-amplify-fieldset] {
-  padding: 30px !important;
-}
-
-/* 確認コード説明文を白色に */
-[data-amplify-authenticator] .amplify-authenticator__subtitle,
-[data-amplify-authenticator] [data-amplify-router="confirmSignUp"] p,
-[data-amplify-authenticator] [data-amplify-router="confirmSignIn"] p,
-[data-amplify-authenticator] [data-amplify-router="confirmResetPassword"] p,
-[data-amplify-router="confirmSignUp"] .amplify-text,
-[data-amplify-router="confirmSignIn"] .amplify-text,
-[data-amplify-router="confirmResetPassword"] .amplify-text {
-  color: #ffffff !important;
-}
-
-[data-amplify-authenticator] label {
-  color: #fca5a5 !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-  margin-bottom: 8px !important;
-}
-
-[data-amplify-authenticator] input {
-  background: rgba(255, 255, 255, 0.1) !important;
+/* 入力欄とボタンのグループ（枠線を統一） */
+[data-amplify-authenticator] .amplify-field-group {
   border: 1px solid rgba(185, 28, 28, 0.5) !important;
   border-radius: 6px !important;
-  color: #ffffff !important;
-  font-size: 14px !important;
-  padding: 12px !important;
-  transition: all 0.2s !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important; /* 余計な影を消す */
 }
 
-[data-amplify-authenticator] input:focus {
-  border-color: #dc2626 !important;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2) !important;
+/* 入力欄本体の枠線を消す（グループ側に枠線があるため） */
+[data-amplify-authenticator] .amplify-input {
+  border: none !important;
+  color: #ffffff !important;
+}
+
+/* パスワード表示ボタン（目玉）のスタイル */
+[data-amplify-authenticator] .amplify-field__show-password {
+  border: none !important;
+  border-left: 1px solid rgba(185, 28, 28, 0.5) !important;
+  color: #dc2626 !important;
+  background: transparent !important;
   outline: none !important;
+  box-shadow: none !important;
 }
 
-[data-amplify-authenticator] input::placeholder {
-  color: #6b7280 !important;
+/* ボタンホバー時 */
+[data-amplify-authenticator] .amplify-field__show-password:hover {
+  background: rgba(220, 38, 38, 0.1) !important;
 }
 
-/* ボタン */
+/* 送信ボタン */
 [data-amplify-authenticator] button[type="submit"] {
-  background: linear-gradient(135deg, #dc2626, #991b1b) !important;
-  border: none !important;
-  border-radius: 6px !important;
+  background: #dc2626 !important;
   color: #ffffff !important;
-  font-weight: bold !important;
-  font-size: 16px !important;
-  padding: 12px !important;
-  width: 100% !important;
-  cursor: pointer !important;
-  transition: all 0.2s !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
-}
-
-[data-amplify-authenticator] button[type="submit"]:hover {
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
-}
-
-[data-amplify-authenticator] button[type="submit"]:active {
-  transform: translateY(0) !important;
-}
-
-/* リンク */
-[data-amplify-authenticator] button[data-amplify-router-content] {
-  color: #60a5fa !important;
-  font-size: 13px !important;
-  text-decoration: none !important;
-  background: transparent !important;
-  border: none !important;
-  padding: 8px 0 !important;
-  cursor: pointer !important;
-  transition: color 0.2s !important;
-}
-
-[data-amplify-authenticator] button[data-amplify-router-content]:hover {
-  color: #93c5fd !important;
-  text-decoration: underline !important;
-}
-
-/* エラーメッセージ */
-[data-amplify-authenticator] [role="alert"] {
-  background: rgba(239, 68, 68, 0.2) !important;
-  border: 1px solid rgba(239, 68, 68, 0.5) !important;
   border-radius: 6px !important;
-  color: #fca5a5 !important;
-  padding: 12px !important;
-  font-size: 13px !important;
-  margin-bottom: 16px !important;
-}
-
-/* 戻るボタン */
-[data-amplify-authenticator] button[data-amplify-router-back] {
-  color: #9ca3af !important;
-  font-size: 13px !important;
-  background: transparent !important;
-  border: none !important;
-  padding: 8px !important;
-  cursor: pointer !important;
-}
-
-[data-amplify-authenticator] button[data-amplify-router-back]:hover {
-  color: #d1d5db !important;
-}
-
-/* フッター */
-[data-amplify-authenticator] [data-amplify-footer] {
-  background: transparent !important;
-  padding: 20px !important;
-}
-
-/* ========================================
-   「コードを再送信」ボタン完全削除
-   最強の多層防御CSS
-   ======================================== */
-
-/* 第1層: ConfirmSignUp/ConfirmResetPasswordのtype="button"を完全削除 */
-[data-amplify-router="confirmSignUp"] button[type="button"],
-[data-amplify-router="confirmResetPassword"] button[type="button"],
-[data-amplify-authenticator-confirmsignup] button[type="button"],
-[data-amplify-authenticator-confirmresetpassword] button[type="button"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  position: absolute !important;
-  left: -9999px !important;
-  top: -9999px !important;
-  width: 0 !important;
-  height: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: 0 !important;
-  pointer-events: none !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  clip-path: inset(50%) !important;
-  white-space: nowrap !important;
-  z-index: -9999 !important;
-}
-
-/* 第2層: variation="primary"以外のボタンを削除 */
-[data-amplify-router="confirmSignUp"] button:not([variation="primary"]):not([type="submit"]),
-[data-amplify-router="confirmResetPassword"] button:not([variation="primary"]):not([type="submit"]) {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  position: absolute !important;
-  left: -9999px !important;
-}
-
-/* 第3層: 2番目のボタンを削除（送信ボタンの次のボタン） */
-[data-amplify-router="confirmSignUp"] button:nth-of-type(2),
-[data-amplify-router="confirmResetPassword"] button:nth-of-type(2) {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  position: absolute !important;
-  left: -9999px !important;
-}
-
-/* 第4層: フッター内のボタンすべて削除 */
-[data-amplify-footer] button:not([type="submit"]),
-[data-amplify-footer] *:not([type="submit"]),
-[data-amplify-footer-content],
-button[data-amplify-footer-content],
-[data-amplify-router="confirmSignUp"] [data-amplify-footer] *,
-[data-amplify-router="confirmResetPassword"] [data-amplify-footer] * {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  position: absolute !important;
-  left: -9999px !important;
-}
-
-/* 第5層: aria-labelによる削除 */
-button[aria-label*="Resend"],
-button[aria-label*="再送信"],
-button[aria-label*="resend"],
-[aria-label*="Resend"],
-[aria-label*="再送信"],
-[aria-label*="resend"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  position: absolute !important;
-  left: -9999px !important;
-}
-
-/* 第6層: データ属性による削除 */
-[data-amplify-authenticator] button[data-amplify-router-content="Resend Code"],
-[data-amplify-authenticator] button[data-amplify-router-content="コードを再送信"],
-button[data-variation]:not([data-variation="primary"]) {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  position: absolute !important;
-  left: -9999px !important;
-}
-
-/* 第7層: 子要素も削除 */
-[data-amplify-router="confirmSignUp"] button[type="button"] *,
-[data-amplify-router="confirmResetPassword"] button[type="button"] *,
-[data-amplify-footer] button:not([type="submit"]) * {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-}
-
-/* 第8層: :has()セレクタでコンテナごと削除 */
-[data-amplify-router="confirmSignUp"]:has(button[type="button"]) button[type="button"],
-[data-amplify-router="confirmResetPassword"]:has(button[type="button"]) button[type="button"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  position: absolute !important;
-  left: -9999px !important;
-}
-
-/* 第9層: Flexコンテナ内の最後から2番目のボタン（可能性として） */
-[data-amplify-router="confirmSignUp"] [class*="flex"] button:nth-last-child(2),
-[data-amplify-router="confirmResetPassword"] [class*="flex"] button:nth-last-child(2) {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-/* 第10層: amplify-buttonクラスでtype="button"を削除 */
-button[class*="amplify-button"][type="button"]:not([class*="primary"]) {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  position: absolute !important;
-  left: -9999px !important;
-}
-
-/* レスポンシブ */
-@media (max-width: 768px) {
-  [data-amplify-authenticator] [data-amplify-router] {
-    margin: 20px !important;
-    max-width: calc(100% - 40px) !important;
-  }
-
-  [data-amplify-authenticator] [data-amplify-fieldset] {
-    padding: 20px !important;
-  }
-}
-
-/* パスワードをお忘れの方リンクのスタイル */
-[data-amplify-authenticator] [data-amplify-router="signIn"] [data-amplify-footer] {
-  display: block !important;
-  visibility: visible !important;
-  background: transparent !important;
-  padding: 20px !important;
-  border-top: 1px solid rgba(185, 28, 28, 0.2) !important;
-  text-align: center !important;
-}
-
-[data-amplify-authenticator] [data-amplify-router="signIn"] [data-amplify-footer] button {
-  display: inline-block !important;
-  visibility: visible !important;
-  background: transparent !important;
-  border: none !important;
-  color: #60a5fa !important;
-  font-size: 14px !important;
-  cursor: pointer !important;
-  text-decoration: none !important;
-  padding: 8px !important;
-  transition: color 0.2s !important;
-}
-
-[data-amplify-authenticator] [data-amplify-router="signIn"] [data-amplify-footer] button:hover {
-  color: #93c5fd !important;
-  text-decoration: underline !important;
 }

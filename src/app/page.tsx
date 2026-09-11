@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { client } from '@/lib/client';
-import Footer from '@/components/Footer';
 
 // キャラクター型定義
 interface Character {
@@ -47,7 +46,15 @@ export default function Home() {
 
   const checkScreenSize = () => {
     const width = window.innerWidth;
-    setIsMobile(width < 768);
+    const mobile = width < 768;
+    setIsMobile(mobile);
+    
+    // モバイルの場合はメニューを閉じる、デスクトップの場合は開く
+    if (!mobile) {
+      setMenuOpen(true);
+    } else {
+      setMenuOpen(false);
+    }
     
     if (width >= 1400) {
       setScreenScale(1);
@@ -372,7 +379,7 @@ export default function Home() {
         style={{
           position: 'fixed',
           top: '20px',
-          left: menuOpen ? '320px' : '20px',
+          left: isMobile ? '20px' : (menuOpen ? '320px' : '20px'),
           zIndex: 999,
           width: '50px',
           height: '50px',
@@ -421,9 +428,7 @@ export default function Home() {
         <div style={{
           padding: '20px',
           borderBottom: '2px solid rgba(185, 28, 28, 0.3)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
+          textAlign: 'center'
         }}>
           <h2 style={{
             fontSize: '20px',
@@ -434,64 +439,63 @@ export default function Home() {
           }}>
             MENU
           </h2>
-          <button
-            onClick={() => setMenuOpen(false)}
-            style={{
-              width: '32px',
-              height: '32px',
-              background: 'rgba(185, 28, 28, 0.3)',
-              border: '1px solid rgba(185, 28, 28, 0.5)',
-              borderRadius: '50%',
-              color: '#fca5a5',
-              cursor: 'pointer',
-              fontSize: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            ×
-          </button>
         </div>
 
         {/* メニュー項目 */}
         <nav style={{ padding: '20px 0' }}>
           {[
-            { label: 'TOP', href: '/' },
-            { label: 'キャラクター', href: '/' },
-            { label: '対策メモ', href: '/memo/list'},
-            { label: 'コンボ', href: '/combo/list'},
-            { label: 'カスタマイズ', href: '/coming-soon?type=customize'}
+            { label: 'TOP', href: '/', isLink: true },
+            { label: '対策メモ', href: '/memo/list', isLink: true },
+            { label: 'コンボ', href: '/combo/list', isLink: true }
           ].map((item, index) => (
-            <a
-              key={index}
-              href={item.href}
-              onClick={() => setMenuOpen(false)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '15px',
-                padding: '15px 30px',
-                color: '#e5e7eb',
-                textDecoration: 'none',
-                fontSize: '16px',
-                fontWeight: '600',
-                borderLeft: '4px solid transparent',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(185, 28, 28, 0.2)';
-                e.currentTarget.style.borderLeftColor = '#dc2626';
-                e.currentTarget.style.color = '#fef2f2';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderLeftColor = 'transparent';
-                e.currentTarget.style.color = '#e5e7eb';
-              }}
-            >
-              <span style={{ letterSpacing: '1px' }}>{item.label}</span>
-            </a>
+            item.isLink ? (
+              <a
+                key={index}
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '15px',
+                  padding: '15px 30px',
+                  color: '#e5e7eb',
+                  textDecoration: 'none',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  borderLeft: '4px solid transparent',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(185, 28, 28, 0.2)';
+                  e.currentTarget.style.borderLeftColor = '#dc2626';
+                  e.currentTarget.style.color = '#fef2f2';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderLeftColor = 'transparent';
+                  e.currentTarget.style.color = '#e5e7eb';
+                }}
+              >
+                <span style={{ letterSpacing: '1px' }}>{item.label}</span>
+              </a>
+            ) : (
+              <div
+                key={index}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '15px',
+                  padding: '15px 30px',
+                  color: '#6b7280',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  borderLeft: '4px solid transparent',
+                  cursor: 'default'
+                }}
+              >
+                <span style={{ letterSpacing: '1px' }}>{item.label}</span>
+              </div>
+            )
           ))}
         </nav>
 
@@ -515,6 +519,23 @@ export default function Home() {
         </div>
       </div>
 
+      {/* モバイル用オーバーレイ */}
+      {isMobile && menuOpen && (
+        <div
+          onClick={() => setMenuOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            zIndex: 997,
+            backdropFilter: 'blur(4px)'
+          }}
+        />
+      )}
+
       {/* メインコンテンツ */} 
       <div style={{
         minHeight: '100vh',
@@ -527,9 +548,9 @@ export default function Home() {
         backgroundAttachment: 'fixed',
         backgroundRepeat: 'no-repeat',
         position: 'relative',
-        marginLeft: menuOpen ? '300px' : '0',
+        marginLeft: isMobile ? '0' : (menuOpen ? '300px' : '0'),
         transition: 'margin-left 0.3s ease-in-out',
-        width: menuOpen ? 'calc(100% - 300px)' : '100%',
+        width: isMobile ? '100%' : (menuOpen ? 'calc(100% - 300px)' : '100%'),
       }}>
         <div style={{
           position: 'absolute',
@@ -650,23 +671,23 @@ export default function Home() {
               
               <div style={{
                 position: 'relative',
-                padding: '20px 30px'
+                padding: isMobile ? '10px 15px' : '20px 30px'
               }}>
                 {newsItems.map((news, index) => (
                   <div 
                     key={index}
                     style={{
-                      padding: '15px 0',
+                      padding: isMobile ? '10px 0' : '15px 0',
                       borderBottom: index < newsItems.length - 1 ? '1px solid rgba(185, 28, 28, 0.2)' : 'none',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '20px',
+                      gap: isMobile ? '8px' : '20px',
                       transition: 'all 0.2s',
                       cursor: 'pointer'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = 'rgba(185, 28, 28, 0.1)';
-                      e.currentTarget.style.paddingLeft = '10px';
+                      e.currentTarget.style.paddingLeft = isMobile ? '5px' : '10px';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = 'transparent';
@@ -674,9 +695,9 @@ export default function Home() {
                     }}
                   >
                     <div style={{
-                      fontSize: '16px',
+                      fontSize: isMobile ? '11px' : '16px',
                       color: '#9ca3af',
-                      minWidth: '110px',
+                      minWidth: isMobile ? '80px' : '110px',
                       fontFamily: 'monospace',
                       letterSpacing: '1px'
                     }}>
@@ -686,11 +707,11 @@ export default function Home() {
                     <div style={{
                       background: 'linear-gradient(135deg, #dc2626, #991b1b)',
                       color: '#ffffff',
-                      padding: '2px 10px',
-                      fontSize: '13px',
+                      padding: isMobile ? '2px 6px' : '2px 10px',
+                      fontSize: isMobile ? '10px' : '13px',
                       fontWeight: 'bold',
                       borderRadius: '2px',
-                      minWidth: '50px',
+                      minWidth: isMobile ? '40px' : '50px',
                       textAlign: 'center',
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
                     }}>
@@ -698,7 +719,7 @@ export default function Home() {
                     </div>
                     
                     <div style={{
-                      fontSize: '16px',
+                      fontSize: isMobile ? '11px' : '16px',
                       color: '#e5e7eb',
                       flex: 1,
                       letterSpacing: '0.5px'
@@ -854,8 +875,32 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* フッター */}
+        <footer style={{
+          backgroundColor: '#000000',
+          color: '#ffffff',
+          padding: 0,
+          margin: 0,
+          width: '100%'
+        }}>
+          <div style={{
+            maxWidth: '100%',
+            margin: 0,
+            padding: '24px 0',
+            textAlign: 'center'
+          }}>
+            <p style={{
+              fontSize: isMobile ? '14px' : '16px',
+              margin: 0
+            }}>
+              TEKKEN™8 & ©Bandai Namco Entertainment Inc.
+            </p>
+          </div>
+        </footer>
       </div>
     </div>
+
     </div>
   );
 }

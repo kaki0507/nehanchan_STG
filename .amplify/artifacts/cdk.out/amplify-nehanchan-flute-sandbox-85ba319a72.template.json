@@ -44,6 +44,12 @@
     "awsAppsyncApiKey",
     "awsAppsyncAdditionalAuthenticationTypes"
    ]
+  },
+  "AWS::Amplify::Function": {
+   "version": "1",
+   "stackOutputs": [
+    "definedFunctions"
+   ]
   }
  },
  "Outputs": {
@@ -208,6 +214,23 @@
   },
   "awsAppsyncAdditionalAuthenticationTypes": {
    "Value": "API_KEY,AWS_IAM"
+  },
+  "definedFunctions": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "[\"",
+      {
+       "Fn::GetAtt": [
+        "auth179371D7",
+        "Outputs.amplifynehanchanflutesandbox85ba319a72authpresignuplambda00BB05FCRef"
+       ]
+      },
+      "\"]"
+     ]
+    ]
+   }
   }
  },
  "Resources": {
@@ -240,7 +263,7 @@
        {
         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
        },
-       "/93be05a6708b22f257f156b170c927115987e7bb114379af36a248f524876854.json"
+       "/1ad9a95a1aa0817bfcaec4cae82d81a7bd06d8ef1a583e670645232157233462.json"
       ]
      ]
     }
@@ -308,7 +331,7 @@
        {
         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
        },
-       "/98fe72a51093012cdd623d85deb21cdc8a43193c8a549ca7b5526a413920b87c.json"
+       "/5c683997c191fecab151c583890f8a9286b529c09fb96365e9f5b27b2f39aa27.json"
       ]
      ]
     }

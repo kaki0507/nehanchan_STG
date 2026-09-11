@@ -22,7 +22,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/6062acccd194544dadbe7daff605d39b4a185d3ec1d11330266f181b57ec34ae.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/96aa5b77bbaf4bd7921be88fa4b879b0472348c9330b48fdc74aa1d81301b74b.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -101,6 +101,30 @@
             "data": "amplifyAuthIdentityPoolRoleAttachment045F17C8"
           }
         ],
+        "/amplify-nehanchan-flute-sandbox-85ba319a72/auth/pre-signup-lambda/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "presignuplambdaServiceRole1120074C"
+          }
+        ],
+        "/amplify-nehanchan-flute-sandbox-85ba319a72/auth/pre-signup-lambda/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "presignuplambdaE72B81B3"
+          }
+        ],
+        "/amplify-nehanchan-flute-sandbox-85ba319a72/auth/pre-signup-lambda/CognitoInvokePermission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "presignuplambdaCognitoInvokePermissionC26EB236"
+          }
+        ],
+        "/amplify-nehanchan-flute-sandbox-85ba319a72/auth/PreSignUpFunctionName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PreSignUpFunctionName"
+          }
+        ],
         "/amplify-nehanchan-flute-sandbox-85ba319a72/auth/CDKMetadata/Default": [
           {
             "type": "aws:cdk:logicalId",
@@ -141,6 +165,12 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "amplifynehanchanflutesandbox85ba319a72authamplifyAuthunauthenticatedUserRoleEACE3A58Ref"
+          }
+        ],
+        "/amplify-nehanchan-flute-sandbox-85ba319a72/auth/amplifynehanchanflutesandbox85ba319a72authpresignuplambda00BB05FCRef": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifynehanchanflutesandbox85ba319a72authpresignuplambda00BB05FCRef"
           }
         ],
         "/amplify-nehanchan-flute-sandbox-85ba319a72/auth.NestedStack/auth.NestedStackResource": [
@@ -5061,6 +5091,12 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "awsAppsyncAdditionalAuthenticationTypes"
+          }
+        ],
+        "/amplify-nehanchan-flute-sandbox-85ba319a72/definedFunctions": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "definedFunctions"
           }
         ],
         "/amplify-nehanchan-flute-sandbox-85ba319a72/CDKMetadata/Default": [

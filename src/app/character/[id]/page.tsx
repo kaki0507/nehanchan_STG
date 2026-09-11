@@ -1651,6 +1651,30 @@ const renderRemarks = (remarks?: (string | null)[] | null) => {
           </div>
         </div>
       )}
+
+      {/* フッター */}
+      <footer style={{
+        backgroundColor: '#000000',
+        color: '#ffffff',
+        padding: 0,
+        margin: isMobile ? '0 -16px -16px -16px' : '0 -24px -24px -24px',
+        width: 'auto'
+      }}>
+        <div style={{
+          maxWidth: '100%',
+          margin: 0,
+          padding: '24px 0',
+          textAlign: 'center'
+        }}>
+          <p style={{
+            fontSize: isMobile ? '14px' : '16px',
+            margin: 0
+          }}>
+            TEKKEN™8 & ©Bandai Namco Entertainment Inc.
+          </p>
+        </div>
+      </footer>
+
     </div>
   );
 }

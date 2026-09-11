@@ -666,26 +666,7 @@ export default function MemoEditPage() {
               justifyContent: 'center',
               flexWrap: 'wrap'
             }}>
-              <a
-                href="/memo/list"
-                style={{
-                  padding: '14px 40px',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  background: 'rgba(107, 114, 128, 0.3)',
-                  border: '2px solid rgba(107, 114, 128, 0.5)',
-                  borderRadius: '8px',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  minWidth: '140px',
-                  textDecoration: 'none',
-                  display: 'inline-block',
-                  textAlign: 'center'
-                }}
-              >
-                戻る
-              </a>
+              
 
               <button
                 onClick={handleSave}

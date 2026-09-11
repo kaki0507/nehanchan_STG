@@ -20,6 +20,14 @@
     ],
     "EmailVerificationMessage": "The verification code to your new account is {####}",
     "EmailVerificationSubject": "Verify your new account",
+    "LambdaConfig": {
+     "PreSignUp": {
+      "Fn::GetAtt": [
+       "presignuplambdaE72B81B3",
+       "Arn"
+      ]
+     }
+    },
     "Policies": {
      "PasswordPolicy": {
       "MinimumLength": 6,
@@ -298,15 +306,203 @@
     "aws:cdk:path": "amplify-nehanchan-flute-sandbox-85ba319a72/auth/amplifyAuth/IdentityPoolRoleAttachment"
    }
   },
+  "presignuplambdaServiceRole1120074C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Policies": [
+     {
+      "PolicyName": "CognitoAccessPolicy",
+      "PolicyDocument": {
+       "Version": "2012-10-17",
+       "Statement": [
+        {
+         "Effect": "Allow",
+         "Action": [
+          "cognito-idp:ListUsers",
+          "cognito-idp:AdminDeleteUser",
+          "cognito-idp:AdminGetUser"
+         ],
+         "Resource": "*"
+        }
+       ]
+      }
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "amplify:deployment-type",
+      "Value": "sandbox"
+     },
+     {
+      "Key": "amplify:friendly-name",
+      "Value": "pre-signup"
+     },
+     {
+      "Key": "created-by",
+      "Value": "amplify"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-nehanchan-flute-sandbox-85ba319a72/auth/pre-signup-lambda/ServiceRole/Resource"
+   }
+  },
+  "presignuplambdaE72B81B3": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "x86_64"
+    ],
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "c65ecaf747e5b22a7a58485f2d37ff04e2eb0d1bd91eb30b01c2736950a44d37.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "AMPLIFY_SSM_ENV_CONFIG": "{}"
+     }
+    },
+    "EphemeralStorage": {
+     "Size": 512
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "presignuplambdaServiceRole1120074C",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Tags": [
+     {
+      "Key": "amplify:deployment-type",
+      "Value": "sandbox"
+     },
+     {
+      "Key": "amplify:friendly-name",
+      "Value": "pre-signup"
+     },
+     {
+      "Key": "created-by",
+      "Value": "amplify"
+     }
+    ],
+    "Timeout": 3
+   },
+   "DependsOn": [
+    "presignuplambdaServiceRole1120074C"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-nehanchan-flute-sandbox-85ba319a72/auth/pre-signup-lambda/Resource",
+    "aws:asset:path": "asset.c65ecaf747e5b22a7a58485f2d37ff04e2eb0d1bd91eb30b01c2736950a44d37",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "presignuplambdaCognitoInvokePermissionC26EB236": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "presignuplambdaE72B81B3",
+      "Arn"
+     ]
+    },
+    "Principal": "cognito-idp.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "amplifyAuthUserPool4BA7F805",
+      "Arn"
+     ]
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-nehanchan-flute-sandbox-85ba319a72/auth/pre-signup-lambda/CognitoInvokePermission"
+   }
+  },
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/02LwQrCMBBEv6X3dK3BH5CevIhUPEtMVt023UCztUjIv0uRak8z82ZGg95qqAozxdK6rvR0g3TEKOjOYmynzBSvyYYHkwRIl4jDKQSv6jv//GJqT8iyrv7k4JCF5L2c17kJHvcixj57ZMmKTA9phvNw1pxVgzGMg8WsODiENm5eWsN2B1XRRqJyGFmoR2i++gHHYVWU1wAAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/02NzW7CQAyEn4X7xoXQF4BIlXqhKKjnaNl1UufHW8Xeoirad6+WFsrpG49n7BLKTQnrlb1I4fxQjHSG5YCi6E9q3WDsRZrFhY5JAyzvgvMxhNFULd/1TVQjIevj6t959chK+n0rP851GHGnat3HhKzJkJ1gyWYOZiYz2unsbcPBYy9wuOIlslMKbGTbWBFUgV2GkS3soxtQ91bwrwpL1fK9UbV8xHkiEQqckqlRQpwdmuuBk9qOuMupt6ifUZPJj6GXp6+yhM0zrFe9EBVzZKUJof7lD7ZCsP5MAQAA"
    },
    "Metadata": {
     "aws:cdk:path": "amplify-nehanchan-flute-sandbox-85ba319a72/auth/CDKMetadata/Default"
    },
    "Condition": "CDKMetadataAvailable"
+  }
+ },
+ "Outputs": {
+  "PreSignUpFunctionName": {
+   "Description": "Pre Sign-up Lambda Function Name",
+   "Value": {
+    "Ref": "presignuplambdaE72B81B3"
+   }
+  },
+  "amplifynehanchanflutesandbox85ba319a72authamplifyAuthUserPool63798C50Ref": {
+   "Value": {
+    "Ref": "amplifyAuthUserPool4BA7F805"
+   }
+  },
+  "amplifynehanchanflutesandbox85ba319a72authamplifyAuthUserPoolAppClient90E3A9AFRef": {
+   "Value": {
+    "Ref": "amplifyAuthUserPoolAppClient2626C6F8"
+   }
+  },
+  "amplifynehanchanflutesandbox85ba319a72authamplifyAuthIdentityPoolEF8EA1C8Ref": {
+   "Value": {
+    "Ref": "amplifyAuthIdentityPool3FDE84CC"
+   }
+  },
+  "amplifynehanchanflutesandbox85ba319a72authamplifyAuthauthenticatedUserRoleE4BDBD6BRef": {
+   "Value": {
+    "Ref": "amplifyAuthauthenticatedUserRoleD8DA3689"
+   }
+  },
+  "amplifynehanchanflutesandbox85ba319a72authamplifyAuthunauthenticatedUserRoleEACE3A58Ref": {
+   "Value": {
+    "Ref": "amplifyAuthunauthenticatedUserRole2B524D9E"
+   }
+  },
+  "amplifynehanchanflutesandbox85ba319a72authpresignuplambda00BB05FCRef": {
+   "Value": {
+    "Ref": "presignuplambdaE72B81B3"
+   }
   }
  },
  "Conditions": {
@@ -573,33 +769,6 @@
      ]
     }
    ]
-  }
- },
- "Outputs": {
-  "amplifynehanchanflutesandbox85ba319a72authamplifyAuthUserPool63798C50Ref": {
-   "Value": {
-    "Ref": "amplifyAuthUserPool4BA7F805"
-   }
-  },
-  "amplifynehanchanflutesandbox85ba319a72authamplifyAuthUserPoolAppClient90E3A9AFRef": {
-   "Value": {
-    "Ref": "amplifyAuthUserPoolAppClient2626C6F8"
-   }
-  },
-  "amplifynehanchanflutesandbox85ba319a72authamplifyAuthIdentityPoolEF8EA1C8Ref": {
-   "Value": {
-    "Ref": "amplifyAuthIdentityPool3FDE84CC"
-   }
-  },
-  "amplifynehanchanflutesandbox85ba319a72authamplifyAuthauthenticatedUserRoleE4BDBD6BRef": {
-   "Value": {
-    "Ref": "amplifyAuthauthenticatedUserRoleD8DA3689"
-   }
-  },
-  "amplifynehanchanflutesandbox85ba319a72authamplifyAuthunauthenticatedUserRoleEACE3A58Ref": {
-   "Value": {
-    "Ref": "amplifyAuthunauthenticatedUserRole2B524D9E"
-   }
   }
  }
 }
