@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { client } from '@/lib/client';
 import { TextWithIcons } from '@/components/CommandDisplay';
+import type { JSX } from 'react';
 
 interface ComboNode {
   id: string;
