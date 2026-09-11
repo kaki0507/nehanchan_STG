@@ -63,7 +63,7 @@ export default function ComboDetailPage() {
         setCombo(data as Combo);
         
         // ツリーデータをパース
-        const parsedTree: TreeData = JSON.parse(data.nodes);
+        const parsedTree: TreeData = JSON.parse(data.nodes ?? '{}');
         setTreeData(parsedTree);
         
         // ノードマップを作成
