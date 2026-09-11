@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { client } from '@/lib/client';
-import AuthWrapper from '@/components/AuthWrapper';
+import { AuthWrapper } from '@/components/AuthWrapper';
 
 export default function AdminPage() {
   const [stats, setStats] = useState({
