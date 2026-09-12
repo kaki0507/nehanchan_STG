@@ -135,6 +135,7 @@ export function TextWithIcons({
             <span 
               key={`text-${index}`} 
               className={`${textClassName} whitespace-nowrap`}
+              style={{ lineHeight: 1 }}
             >
               {element.value}
             </span>
