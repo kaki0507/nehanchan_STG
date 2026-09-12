@@ -128,14 +128,13 @@ export function TextWithIcons({
   }
 
   return (
-    <div className={`inline-flex items-center gap-1 flex-wrap ${className}`}>
+    <span className={`inline ${className}`}>
       {elements.map((element: CommandElement, index: number) => {
         if (element.type === 'text') {
           return (
             <span 
               key={`text-${index}`} 
-              className={`${textClassName} whitespace-nowrap`}
-              style={{ lineHeight: 1 }}
+              className={`${textClassName}`}
             >
               {element.value}
             </span>
@@ -146,7 +145,8 @@ export function TextWithIcons({
               key={`icon-${element.value}-${index}`}
               src={getIconPath(element.value)}
               alt={element.value}
-              className={`${sizeClasses[size]} object-contain flex-shrink-0`}
+              className={`${sizeClasses[size]} object-contain inline-block`}
+              style={{ verticalAlign: 'middle', margin: '0 2px' }}
               onError={(e) => {
                 // 画像が見つからない場合はテキストに置換
                 const target = e.target as HTMLImageElement;
@@ -160,7 +160,7 @@ export function TextWithIcons({
           );
         }
       })}
-    </div>
+    </span>
   );
 }
 
