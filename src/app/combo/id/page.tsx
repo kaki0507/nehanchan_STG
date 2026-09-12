@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { JSX } from 'react';
 import { useParams } from 'next/navigation';
 import { client } from '@/lib/client';
 import { TextWithIcons } from '@/components/CommandDisplay';
@@ -63,7 +64,7 @@ export default function ComboDetailPage() {
         setCombo(data as Combo);
         
         // ツリーデータをパース
-        const parsedTree: TreeData = JSON.parse(data.nodes);
+        const parsedTree: TreeData = JSON.parse(data.nodes ?? '{}');
         setTreeData(parsedTree);
         
         // ノードマップを作成
