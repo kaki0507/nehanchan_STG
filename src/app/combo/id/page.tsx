@@ -451,11 +451,11 @@ const renderRemarks = (remarks?: (string | null)[] | null) => {
               overflowWrap: 'break-word',  // 長い単語の折り返し
               color: '#fef2f2',
               display: 'flex',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               gap: '6px',  // 4px → 6pxに変更
               whiteSpace: 'normal'  // 通常の折り返しを許可
             }}>
-              <span style={{ flexShrink: 0, marginTop: '2px' }}>・</span>
+              <span style={{ flexShrink: 0 }}>・</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <TextWithIcons 
                   text={remark} 
