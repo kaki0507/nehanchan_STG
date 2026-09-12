@@ -52,5 +52,3 @@ samconfig.toml
 # Amplify CLI
 amplify/team-provider-info.json
 amplify/.config/
-
-package-lock.json
