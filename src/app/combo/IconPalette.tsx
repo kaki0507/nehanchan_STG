@@ -1,4 +1,4 @@
-// src/app/combo-maker/IconPalette.tsx
+// src/app/combo/IconPalette.tsx
 // アイコン選択パレット（自由入力・一覧の絞り込みで共用）
 'use client';
 

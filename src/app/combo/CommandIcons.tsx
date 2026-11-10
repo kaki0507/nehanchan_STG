@@ -1,4 +1,4 @@
-// src/app/combo-maker/CommandIcons.tsx
+// src/app/combo/CommandIcons.tsx
 // コマンド文字列・自由入力をアイコン付きで表示する（Tailwindに依存しないインラインスタイル版）
 'use client';
 

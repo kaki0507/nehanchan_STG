@@ -1,4 +1,4 @@
-// src/app/combo-maker/FreeInputBuilder.tsx
+// src/app/combo/FreeInputBuilder.tsx
 // 自由入力：アイコン（複数）とテキストボックスを組み合わせて1手を作る
 'use client';
 

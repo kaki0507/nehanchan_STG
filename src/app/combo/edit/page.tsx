@@ -1,5 +1,5 @@
-// src/app/combo-maker/edit/page.tsx
-// /combo-maker/edit?id=xxx
+// src/app/combo/edit/page.tsx
+// /combo/edit?id=xxx
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
@@ -33,6 +33,7 @@ function EditContent() {
           memo: data.memo ?? '',
           steps: parseSteps(data.steps),
           counterHit: data.counter_hit ?? false,
+          damage: data.damage ?? null,
         });
       } catch (error) {
         console.error('取得エラー:', error);
@@ -46,7 +47,7 @@ function EditContent() {
     return (
       <div style={{ ...pageStyle, color: '#9ca3af', textAlign: 'center', paddingTop: '80px' }}>
         {message}
-        <div style={{ marginTop: '16px' }}><a href="/combo-maker" style={{ color: '#60a5fa' }}>一覧へ戻る</a></div>
+        <div style={{ marginTop: '16px' }}><a href="/combo/list" style={{ color: '#60a5fa' }}>一覧へ戻る</a></div>
       </div>
     );
   }

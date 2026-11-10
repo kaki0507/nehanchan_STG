@@ -1,4 +1,4 @@
-// src/app/combo-maker/styles.ts
+// src/app/combo/styles.ts
 // コンボメーカー共通のスタイル定義
 import type { CSSProperties } from 'react';
 

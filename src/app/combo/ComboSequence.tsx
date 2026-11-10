@@ -1,4 +1,4 @@
-// src/app/combo-maker/ComboSequence.tsx
+// src/app/combo/ComboSequence.tsx
 // コンボ（技の並び）を「アイコン ▶ アイコン ▶ …」の形で表示する
 'use client';
 

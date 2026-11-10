@@ -1,4 +1,4 @@
-// src/app/combo-maker/iconPalette.ts
+// src/app/combo/iconPalette.ts
 // 自由入力で選べるアイコン（public/command-icons, public/effect-icons に画像があるもの）
 // groups → blocks（横に並ぶまとまり）→ rows（行）→ セル（null は空きマス）
 

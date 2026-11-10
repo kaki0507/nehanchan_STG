@@ -1,575 +1,236 @@
+// src/app/combo/list/page.tsx
+// コンボメーカー：一覧（キャラ・最初のコマンドで絞り込み、↑↓で並び替え）
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { client } from '@/lib/client';
-import { TextWithIcons } from '@/components/CommandDisplay';
-import Link from 'next/link';
+import type { Schema } from '@/amplify/data/resource';
+import ComboSequence from '../ComboSequence';
+import IconPalette from '../IconPalette';
+import { Icon } from '../CommandIcons';
+import { type ComboStep, parseSteps, startsWithIcons } from '../types';
+import { pageStyle, containerStyle, panelStyle, inputStyle, labelStyle, primaryButtonStyle, smallButtonStyle } from '../styles';
 
-interface Character {
+interface ComboRow {
   id: string;
   character_id: string;
-  character_name_en: string;
-  character_name_jp?: string | null;
-  display_name?: string | null;
+  character_name: string;
+  title: string;
+  memo: string;
+  steps: ComboStep[];
+  sort_order: number | null;
+  counter_hit: boolean;
+  damage: number | null;
+  createdAt: string;
 }
 
-interface Combo {
-  id: string;
-  character_id: string;
-  character_name?: string;
-  combo_name?: string;
-  title?: string;
-  damage?: number;
-  difficulty?: number;
-  notes?: string;
-  description?: string;
-  category?: string;
-  importance?: number;
-  nodes?: string;
-  display_mode?: 'move_name' | 'command';
-  createdAt?: string;
-  updatedAt?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface ComboNode {
-  id: string;
-  type: 'move' | 'freetext';
-  moveId?: string;
-  moveName?: string;
-  command?: string;
-  freeText?: string;
-  backgroundColor: string;
-  children: string[];
-}
-
-// 背景色定義
-const BACKGROUND_COLORS = {
-  blue: '#60a5fa',
-  orange: '#ff9500',
-  red: '#ff8787',
-  green: '#69db7c',
-  yellow: '#ffd700',
-  gray: '#4b5563',
-  purple: '#cc9dff',
-  cyan: '#66d9e8',
+// 並び順：sort_order 未設定（並び替え前に作ったもの）を新しい順で先頭に、その後 sort_order 順
+const compareCombos = (a: ComboRow, b: ComboRow) => {
+  if (a.sort_order == null && b.sort_order == null) return b.createdAt.localeCompare(a.createdAt);
+  if (a.sort_order == null) return -1;
+  if (b.sort_order == null) return 1;
+  return a.sort_order - b.sort_order;
 };
 
-const hexToRgba = (hex: string, alpha: number = 0.5): { bg: string; border: string } => {
-  const rgbMatch = hex.match(/^#([A-Fa-f0-9]{6})$/);
-  if (rgbMatch) {
-    const hexValue = rgbMatch[1];
-    const r = parseInt(hexValue.substr(0, 2), 16);
-    const g = parseInt(hexValue.substr(2, 2), 16);
-    const b = parseInt(hexValue.substr(4, 2), 16);
-    return {
-      bg: `rgba(${r}, ${g}, ${b}, ${alpha})`,
-      border: `rgba(${r}, ${g}, ${b}, ${alpha * 0.8})`
-    };
-  }
-  return { bg: 'rgba(96, 165, 250, 0.5)', border: 'rgba(96, 165, 250, 0.4)' };
-};
-
-// カテゴリラベル変換
-const CATEGORY_LABELS: { [key: string]: string } = {
-  normal: '通常コンボ',
-  carry: '運び重視コンボ',
-  okizeme: '起き攻め重視コンボ',
-  damage: '火力重視コンボ',
-  counter: 'カウンターヒットコンボ',
-  stage: 'ステージギミックコンボ',
-  basic: '基本コンボ',
-  advanced: '高難度コンボ',
-  setup: 'セットアップ',
-  wakeup: '起き攻め',
-};
-
-export default function ComboListPage() {
-  const [combos, setCombos] = useState<Combo[]>([]);
-  const [characters, setCharacters] = useState<{ [key: string]: Character }>({});
+export default function ComboMakerListPage() {
+  const [combos, setCombos] = useState<ComboRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCharacter, setSelectedCharacter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'created_at' | 'damage' | 'difficulty'>('created_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [reordering, setReordering] = useState(false);
+  const [characterFilter, setCharacterFilter] = useState('');
+  const [commandPrefix, setCommandPrefix] = useState<string[]>([]);
+  const [showPalette, setShowPalette] = useState(false);
 
-  // モーダル
-  const [selectedCombo, setSelectedCombo] = useState<Combo | null>(null);
-  const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const load = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const charactersResponse = await client.models.Character.list({ authMode: 'apiKey' });
-      const charactersList = (charactersResponse.data || []).filter(c => c !== null) as Character[];
-      const charactersMap: { [key: string]: Character } = {};
-      charactersList.forEach((char: Character) => {
-        charactersMap[char.character_id] = char;
-      });
-      setCharacters(charactersMap);
-
-      const combosResponse = await client.models.Combo.list({ authMode: 'apiKey' });
-      const combosList = (combosResponse.data || []).filter(c => c !== null) as Combo[];
-      setCombos(combosList);
+      let rows: ComboRow[] = [];
+      let nextToken: string | null | undefined = undefined;
+      do {
+        const res: { data: Schema['ComboRecipe']['type'][]; nextToken?: string | null } =
+          await client.models.ComboRecipe.list({ authMode: 'userPool', limit: 1000, nextToken });
+        rows = rows.concat(
+          (res.data || []).filter((c) => c !== null).map((c) => ({
+            id: c.id,
+            character_id: c.character_id,
+            character_name: c.character_name ?? c.character_id,
+            title: c.title ?? '',
+            memo: c.memo ?? '',
+            steps: parseSteps(c.steps),
+            sort_order: c.sort_order ?? null,
+            counter_hit: c.counter_hit ?? false,
+            damage: c.damage ?? null,
+            createdAt: c.createdAt,
+          }))
+        );
+        nextToken = res.nextToken;
+      } while (nextToken);
+      setCombos(rows.sort(compareCombos));
     } catch (error) {
-      console.error('データの読み込みに失敗しました:', error);
+      console.error('一覧取得エラー:', error);
+      alert('コンボの取得に失敗しました');
     } finally {
       setLoading(false);
     }
   };
 
-  // ツリーをノードリストに平坦化
-  const flattenTreeNodes = (treeData: any): { nodeId: string; node: any }[] => {
-    const result: { nodeId: string; node: any }[] = [];
-    const flatten = (nodeId: string) => {
-      const node = treeData.nodes[nodeId];
-      if (!node) return;
-      result.push({ nodeId, node });
-      if (node.children && node.children.length > 0) {
-        node.children.forEach((childId: string) => flatten(childId));
-      }
-    };
-    (treeData.rootIds || []).forEach((rootId: string) => flatten(rootId));
-    return result;
-  };
+  useEffect(() => {
+    load();
+  }, []);
 
-  // コンボプレビュー（一覧用・短縮）
-  const renderComboPreview = (combo: Combo) => {
+  // 絞り込み用のキャラ一覧（登録済みコンボから作成）
+  const characterOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    combos.forEach((c) => map.set(c.character_id, c.character_name));
+    return Array.from(map.entries()).sort((a, b) => a[0].padStart(3, '0').localeCompare(b[0].padStart(3, '0')));
+  }, [combos]);
+
+  const visible = combos.filter(
+    (c) => (!characterFilter || c.character_id === characterFilter) && startsWithIcons(c.steps, commandPrefix)
+  );
+
+  // 表示中の一覧で隣のコンボと入れ替え、全体の並び順を振り直して保存する
+  const moveCombo = async (combo: ComboRow, direction: -1 | 1) => {
+    const visibleIndex = visible.findIndex((c) => c.id === combo.id);
+    const neighbor = visible[visibleIndex + direction];
+    if (!neighbor) return;
+
+    const next = [...combos];
+    const a = next.findIndex((c) => c.id === combo.id);
+    const b = next.findIndex((c) => c.id === neighbor.id);
+    [next[a], next[b]] = [next[b], next[a]];
+
+    const renumbered = next.map((c, i) => ({ ...c, sort_order: i }));
+    const changed = renumbered.filter((c, i) => c.sort_order !== combos.find((o) => o.id === next[i].id)?.sort_order);
+
+    const before = combos;
+    setCombos(renumbered); // 先に画面へ反映
+    setReordering(true);
     try {
-      if (!combo.nodes) return <span style={{ color: '#6b7280', fontSize: '12px' }}>ノードなし</span>;
-      const treeData = JSON.parse(combo.nodes);
-      const displayMode = combo.display_mode || 'move_name';
-      const allNodes = flattenTreeNodes(treeData);
-
-      return (
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', gap: '2px', overflow: 'hidden' }}>
-          {allNodes.slice(0, 5).map(({ nodeId, node }, index) => {
-            const text = displayMode === 'move_name'
-              ? (node.moveName || node.freeText || '未設定')
-              : (node.command || node.freeText || '未設定');
-            const colors = hexToRgba(node.backgroundColor || BACKGROUND_COLORS.blue, 0.5);
-            return (
-              <React.Fragment key={nodeId}>
-                {index > 0 && <span style={{ color: '#6b7280', fontSize: '12px', flexShrink: 0 }}>＜</span>}
-                <span style={{
-                  padding: '2px 6px',
-                  background: colors.bg,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  color: '#ffffff',
-                  fontWeight: '500',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  display: 'inline-block'
-                }}>
-                  <TextWithIcons text={text} size="sm" showFallback={false} enableIconReplacement={true} />
-                </span>
-              </React.Fragment>
-            );
-          })}
-          {allNodes.length > 5 && (
-            <span style={{ color: '#9ca3af', fontSize: '11px', flexShrink: 0, marginLeft: '4px' }}>
-              +{allNodes.length - 5}
-            </span>
-          )}
-        </div>
+      const results = await Promise.all(
+        changed.map((c) => client.models.ComboRecipe.update({ id: c.id, sort_order: c.sort_order }, { authMode: 'userPool' }))
       );
-    } catch {
-      return <span style={{ color: '#ef4444', fontSize: '12px' }}>エラー</span>;
-    }
-  };
-
-  // モーダル内のツリー表示
-  const renderModalTree = (combo: Combo) => {
-    try {
-      if (!combo.nodes) return <span style={{ color: '#6b7280' }}>ノードなし</span>;
-      const treeData = JSON.parse(combo.nodes);
-      const displayMode = combo.display_mode || 'move_name';
-
-      const renderNode = (nodeId: string, depth: number = 0): React.ReactElement | null => {
-        const node = treeData.nodes[nodeId];
-        if (!node) return null;
-        const text = displayMode === 'move_name'
-          ? (node.moveName || node.freeText || '未設定')
-          : (node.command || node.freeText || '未設定');
-        const colors = hexToRgba(node.backgroundColor || BACKGROUND_COLORS.blue, 0.5);
-
-        if (node.children && node.children.length === 1) {
-          return (
-            <div key={nodeId} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: depth === 0 ? '12px' : '0' }}>
-              <span style={{ padding: '6px 12px', background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: '20px', color: '#ffffff', fontWeight: '600', fontSize: '13px', whiteSpace: 'nowrap' }}>
-                <TextWithIcons text={text} size="sm" textClassName="font-semibold text-white" showFallback={false} enableIconReplacement={true} />
-              </span>
-              <span style={{ color: '#6b7280', fontSize: '18px' }}>＜</span>
-              {renderNode(node.children[0], depth + 1)}
-            </div>
-          );
-        }
-
-        if (node.children && node.children.length > 1) {
-          return (
-            <div key={nodeId} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: depth === 0 ? '12px' : '0' }}>
-              <span style={{ padding: '6px 12px', background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: '20px', color: '#ffffff', fontWeight: '600', fontSize: '13px', whiteSpace: 'nowrap' }}>
-                <TextWithIcons text={text} size="sm" textClassName="font-semibold text-white" showFallback={false} enableIconReplacement={true} />
-              </span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {node.children.map((childId: string) => (
-                  <div key={childId} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ color: '#6b7280', fontSize: '18px' }}>＜</span>
-                    {renderNode(childId, depth + 1)}
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        }
-
-        return (
-          <div key={nodeId} style={{ marginBottom: depth === 0 ? '12px' : '0' }}>
-            <span style={{ padding: '6px 12px', background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: '20px', color: '#ffffff', fontWeight: '600', fontSize: '13px', whiteSpace: 'nowrap' }}>
-              <TextWithIcons text={text} size="sm" textClassName="font-semibold text-white" showFallback={false} enableIconReplacement={true} />
-            </span>
-          </div>
-        );
-      };
-
-      return (
-        <div style={{ overflowX: 'auto', paddingBottom: '8px' }}>
-          {(treeData.rootIds || []).map((rootId: string) => renderNode(rootId, 0))}
-        </div>
-      );
-    } catch {
-      return <span style={{ color: '#ef4444' }}>表示エラー</span>;
-    }
-  };
-
-  const getDifficultyLabel = (difficulty?: number) => {
-    if (!difficulty) return '未設定';
-    if (difficulty <= 2) return '簡単';
-    if (difficulty <= 4) return '普通';
-    return '難しい';
-  };
-
-  const getDifficultyColor = (difficulty?: number) => {
-    if (!difficulty) return '#6b7280';
-    if (difficulty <= 2) return '#10b981';
-    if (difficulty <= 4) return '#f59e0b';
-    return '#ef4444';
-  };
-
-  const getDisplayName = (char: Character) => {
-    return char.display_name || char.character_name_jp || char.character_name_en;
-  };
-
-  const getCharacterName = (characterId: string) => {
-    const char = characters[characterId];
-    return char ? getDisplayName(char) : '不明';
-  };
-
-  const getComboTitle = (combo: Combo) => {
-    return combo.title || combo.combo_name || '無題のコンボ';
-  };
-
-  const getComboDate = (combo: Combo) => {
-    const dateStr = combo.createdAt || combo.created_at;
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleString('ja-JP');
-  };
-
-  const handleDelete = async (comboId: string) => {
-    if (!confirm('このコンボを削除してもよろしいですか?')) return;
-    try {
-      await client.models.Combo.delete({ id: comboId }, { authMode: 'apiKey' });
-      setCombos(combos.filter(combo => combo.id !== comboId));
-      setShowModal(false);
-      setSelectedCombo(null);
+      if (results.some((r) => r.errors?.length)) throw results.flatMap((r) => r.errors ?? []);
     } catch (error) {
-      console.error('コンボの削除に失敗しました:', error);
-      alert('コンボの削除に失敗しました');
+      console.error('並び替えエラー:', error);
+      alert('並び順の保存に失敗しました');
+      setCombos(before);
+    } finally {
+      setReordering(false);
     }
   };
 
-  const filteredAndSortedCombos = combos
-    .filter(combo => {
-      if (selectedCharacter === 'all') return true;
-      return String(combo.character_id) === String(selectedCharacter);
-    })
-    .sort((a, b) => {
-      let comparison = 0;
-      if (sortBy === 'created_at') {
-        const dateA = new Date(a.createdAt || a.created_at || 0).getTime();
-        const dateB = new Date(b.createdAt || b.created_at || 0).getTime();
-        comparison = dateA - dateB;
-      } else if (sortBy === 'damage') {
-        comparison = (a.damage || 0) - (b.damage || 0);
-      } else if (sortBy === 'difficulty') {
-        comparison = (a.difficulty || 0) - (b.difficulty || 0);
-      }
-      return sortOrder === 'asc' ? comparison : -comparison;
-    });
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #000000 0%, #1a0505 50%, #000000 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ color: '#fca5a5', fontSize: '18px', fontWeight: 'bold' }}>読み込み中...</div>
-      </div>
-    );
-  }
+  const remove = async (combo: ComboRow) => {
+    if (!confirm(`「${combo.title || '無題のコンボ'}」を削除しますか？`)) return;
+    try {
+      await client.models.ComboRecipe.delete({ id: combo.id }, { authMode: 'userPool' });
+      setCombos((prev) => prev.filter((c) => c.id !== combo.id));
+    } catch (error) {
+      console.error('削除エラー:', error);
+      alert('削除に失敗しました');
+    }
+  };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #000000 0%, #1a0505 50%, #000000 100%)', padding: '40px 20px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-
-        {/* ヘッダー */}
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{ display: 'inline-block', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: '-5px', left: '-30px', right: '-30px', bottom: '-5px', background: 'linear-gradient(135deg, #dc2626, #991b1b)', padding: '3px', borderRadius: '2px', boxShadow: '0 5px 15px rgba(0,0,0,0.7)' }}>
-              <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, rgba(0,0,0,0.95), rgba(127,29,29,0.15))', borderRadius: '1px' }} />
-            </div>
-            <h1 style={{ position: 'relative', fontSize: '32px', fontWeight: 'bold', color: '#ffffff', letterSpacing: '4px', textTransform: 'uppercase', textShadow: '2px 2px 4px rgba(0,0,0,0.9)', padding: '10px 40px', margin: 0 }}>
-              コンボ一覧
-            </h1>
+    <div style={pageStyle}>
+      <div style={containerStyle}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffffff', letterSpacing: '2px', margin: 0 }}>コンボメーカー</h1>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <a href="/combo" style={primaryButtonStyle}>＋ 新規作成</a>
+            <a href="/" style={{ ...primaryButtonStyle, background: 'rgba(107,114,128,0.4)' }}>トップ</a>
           </div>
         </div>
 
-        {/* フィルター */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '30px' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-            {[
-              { label: 'キャラクター:', value: selectedCharacter, onChange: setSelectedCharacter, options: [{ value: 'all', label: 'すべて' }, ...Object.values(characters).map(c => ({ value: c.character_id, label: getDisplayName(c) }))] },
-              { label: '並び替え:', value: sortBy, onChange: (v: any) => setSortBy(v), options: [{ value: 'created_at', label: '作成日時' }, { value: 'damage', label: 'ダメージ' }, { value: 'difficulty', label: '難易度' }] },
-              { label: '順序:', value: sortOrder, onChange: (v: any) => setSortOrder(v), options: [{ value: 'desc', label: '降順' }, { value: 'asc', label: '昇順' }] },
-            ].map(({ label, value, onChange, options }) => (
-              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ fontSize: '12px', color: '#fca5a5', fontWeight: '600', whiteSpace: 'nowrap' }}>{label}</label>
-                <select value={value} onChange={(e) => onChange(e.target.value)} style={{ padding: '8px 12px', fontSize: '13px', background: 'rgba(0,0,0,0.6)', border: '2px solid rgba(185,28,28,0.4)', borderRadius: '6px', color: '#ffffff', cursor: 'pointer', outline: 'none', minWidth: '150px' }}>
-                  {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-            ))}
+        {/* 絞り込み */}
+        <div style={{ ...panelStyle, marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+          <div style={{ minWidth: '240px' }}>
+            <label style={labelStyle}>キャラクター</label>
+            <select value={characterFilter} onChange={(e) => setCharacterFilter(e.target.value)} style={inputStyle}>
+              <option value="">すべてのキャラクター</option>
+              {characterOptions.map(([id, name]) => (
+                <option key={id} value={id}>{name}</option>
+              ))}
+            </select>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: '13px', color: '#9ca3af' }}>
-              {filteredAndSortedCombos.length > 0 && <>全{filteredAndSortedCombos.length}件</>}
+          <div style={{ flex: 1, minWidth: '260px' }}>
+            <label style={labelStyle}>最初のコマンド</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+              <div style={{ ...inputStyle, width: 'auto', flex: 1, minHeight: '42px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px' }}>
+                {commandPrefix.length === 0 ? (
+                  <span style={{ color: '#6b7280', fontSize: '13px' }}>指定なし</span>
+                ) : (
+                  commandPrefix.map((code, i) => <Icon key={i} code={code} />)
+                )}
+              </div>
+              <button onClick={() => setShowPalette((v) => !v)} style={{ ...smallButtonStyle, padding: '8px 12px', fontSize: '13px' }}>
+                {showPalette ? '▲ 閉じる' : '▼ アイコン選択'}
+              </button>
+              <button
+                onClick={() => setCommandPrefix((prev) => prev.slice(0, -1))}
+                disabled={commandPrefix.length === 0}
+                style={{ ...smallButtonStyle, padding: '8px 12px', fontSize: '13px' }}
+              >
+                1つ戻す
+              </button>
+              <button
+                onClick={() => setCommandPrefix([])}
+                disabled={commandPrefix.length === 0}
+                style={{ ...smallButtonStyle, padding: '8px 12px', fontSize: '13px' }}
+              >
+                クリア
+              </button>
             </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <Link href="/combo/create" style={{ padding: '10px 20px', fontSize: '14px', fontWeight: 'bold', background: 'linear-gradient(135deg, #dc2626, #991b1b)', border: 'none', borderRadius: '6px', color: '#ffffff', cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }}>
-                ＋ 新規作成
-              </Link>
-              <a href="/" style={{ padding: '10px 20px', fontSize: '14px', fontWeight: 'bold', background: 'rgba(107,114,128,0.3)', border: '2px solid rgba(107,114,128,0.5)', borderRadius: '6px', color: '#ffffff', textDecoration: 'none', display: 'inline-block' }}>
-                トップへ
-              </a>
-            </div>
+            {showPalette && (
+              <div style={{ marginTop: '12px' }}>
+                <IconPalette onSelect={(code) => setCommandPrefix((prev) => [...prev, code])} />
+              </div>
+            )}
           </div>
         </div>
 
-        {/* コンボリスト */}
-        {filteredAndSortedCombos.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(135deg, #dc2626, #991b1b)', padding: '3px', borderRadius: '8px' }}>
-                <div style={{ width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', borderRadius: '6px' }} />
-              </div>
-              <div style={{ position: 'relative', padding: '40px 60px', color: '#9ca3af', fontSize: '16px' }}>
-                コンボが見つかりませんでした
-              </div>
-            </div>
+        {!loading && (
+          <div style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '10px' }}>
+            {visible.length}件{visible.length !== combos.length && ` / 全${combos.length}件`}
+          </div>
+        )}
+
+        {loading ? (
+          <div style={{ color: '#9ca3af', textAlign: 'center', padding: '60px 0' }}>読み込み中...</div>
+        ) : visible.length === 0 ? (
+          <div style={{ color: '#6b7280', textAlign: 'center', padding: '60px 0' }}>
+            {combos.length === 0 ? 'コンボがまだありません。「＋ 新規作成」から作成してください。' : '条件に合うコンボがありません。'}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {filteredAndSortedCombos.map(combo => (
-              <div
-                key={combo.id}
-                onClick={() => { setSelectedCombo(combo); setShowModal(true); }}
-                style={{ position: 'relative', cursor: 'pointer' }}
-              >
-                {/* 赤いボーダー */}
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(135deg, #dc2626, #991b1b)', padding: '1px', borderRadius: '4px', boxShadow: '0 2px 5px rgba(0,0,0,0.5)', transition: 'all 0.2s' }}>
-                  <div style={{ width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', borderRadius: '3px' }} />
-                </div>
-
-                {/* コンテンツ */}
-                <div style={{ position: 'relative', padding: '14px 10px', display: 'flex', gap: '10px', alignItems: 'center' }}
-                  onMouseEnter={(e) => { (e.currentTarget.previousElementSibling as HTMLElement).style.background = 'linear-gradient(135deg, #ef4444, #dc2626)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget.previousElementSibling as HTMLElement).style.background = 'linear-gradient(135deg, #dc2626, #991b1b)'; }}
-                >
-                  {/* キャラクター画像 */}
-                  <div style={{ width: '50px', minWidth: '50px', height: '50px', flexShrink: 0, border: '1px solid rgba(185,28,28,0.4)', borderRadius: '3px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img
-                      src={`/character-faces/${combo.character_id}.png`}
-                      alt={getCharacterName(combo.character_id)}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom' }}
-                      onError={(e) => {
-                        const t = e.target as HTMLImageElement;
-                        if (!t.dataset.fallback) { t.dataset.fallback = 'true'; t.src = `/character-faces-mobile/${combo.character_id}.png`; }
-                        else { t.style.display = 'none'; }
-                      }}
-                    />
-                  </div>
-
-                  {/* キャラクター名 */}
-                  <div style={{ width: '100px', minWidth: '100px', flexShrink: 0 }}>
-                    <div style={{ fontSize: '13px', color: '#60a5fa', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {getCharacterName(combo.character_id)}
-                    </div>
-                    {combo.damage && <div style={{ fontSize: '12px', color: '#ef4444', fontWeight: '600' }}>{combo.damage}ダメージ</div>}
-                  </div>
-
-                  {/* 難易度・重要度 */}
-                  <div style={{ width: '100px', minWidth: '100px', flexShrink: 0 }}>
-                    {combo.difficulty && (
-                      <div style={{ fontSize: '11px', color: getDifficultyColor(combo.difficulty), fontWeight: '600' }}>
-                        難易度: {getDifficultyLabel(combo.difficulty)}
-                      </div>
-                    )}
-                    {combo.importance && (
-                      <div style={{ display: 'flex', gap: '1px' }}>
-                        {[1, 2, 3, 4, 5].map(s => (
-                          <span key={s} style={{ fontSize: '11px', color: s <= combo.importance! ? '#fbbf24' : '#4b5563' }}>★</span>
-                        ))}
-                      </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {visible.map((combo, index) => (
+              <div key={combo.id} style={panelStyle}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div>
+                    <span style={{ color: '#fca5a5', fontSize: '12px', marginRight: '10px' }}>{combo.character_name}</span>
+                    <span style={{ color: '#ffffff', fontSize: '16px', fontWeight: 'bold' }}>{combo.title || '無題のコンボ'}</span>
+                    {combo.damage != null && (
+                      <span style={{ marginLeft: '10px', padding: '2px 8px', background: 'rgba(251, 191, 36, 0.15)', border: '1px solid rgba(251, 191, 36, 0.5)', borderRadius: '4px', color: '#fbbf24', fontSize: '12px', fontWeight: 'bold' }}>
+                        {combo.damage}ダメージ
+                      </span>
                     )}
                   </div>
-
-                  {/* タイトル */}
-                  <div style={{ width: '200px', minWidth: '200px', flexShrink: 0 }}>
-                    <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fef2f2', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {getComboTitle(combo)}
-                    </div>
-                    {combo.category && (
-                      <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
-                        {CATEGORY_LABELS[combo.category] || combo.category}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* コンボプレビュー（短縮） */}
-                  <div style={{ flex: '1 1 auto', minWidth: 0, overflow: 'hidden' }}>
-                    {renderComboPreview(combo)}
-                  </div>
-
-                  {/* クリックヒント */}
-                  <div style={{ flexShrink: 0, fontSize: '11px', color: '#60a5fa' }}>
-                    タップで詳細 ▶
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button onClick={() => moveCombo(combo, -1)} disabled={reordering || index === 0} style={smallButtonStyle} title="上へ">↑</button>
+                    <button onClick={() => moveCombo(combo, 1)} disabled={reordering || index === visible.length - 1} style={smallButtonStyle} title="下へ">↓</button>
+                    <a href={`/combo/edit?id=${combo.id}`} style={{ ...smallButtonStyle, textDecoration: 'none', color: '#60a5fa' }}>編集</a>
+                    <button onClick={() => remove(combo)} style={{ ...smallButtonStyle, color: '#fca5a5' }}>削除</button>
                   </div>
                 </div>
+                <ComboSequence steps={combo.steps} counterHit={combo.counter_hit} />
+                {combo.memo && (
+                  <p style={{ color: '#9ca3af', fontSize: '13px', margin: '10px 0 0', whiteSpace: 'pre-wrap' }}>{combo.memo}</p>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
-
-      {/* モーダル */}
-      {showModal && selectedCombo && (
-        <div
-          onClick={(e) => { if (e.target === e.currentTarget) { setShowModal(false); setSelectedCombo(null); } }}
-          style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}
-        >
-          <div style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.97), rgba(127,29,29,0.2))', border: '2px solid rgba(185,28,28,0.5)', borderRadius: '12px', padding: '28px', maxWidth: '700px', width: '100%', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.8)', position: 'relative' }}>
-
-            {/* モーダルヘッダー */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', borderBottom: '1px solid rgba(185,28,28,0.3)', paddingBottom: '16px' }}>
-              <div>
-                <div style={{ fontSize: '13px', color: '#60a5fa', fontWeight: '600', marginBottom: '4px' }}>
-                  {getCharacterName(selectedCombo.character_id)}
-                </div>
-                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fef2f2' }}>
-                  {getComboTitle(selectedCombo)}
-                </div>
-                {selectedCombo.category && (
-                  <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
-                    {CATEGORY_LABELS[selectedCombo.category] || selectedCombo.category}
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => { setShowModal(false); setSelectedCombo(null); }}
-                style={{ background: 'rgba(185,28,28,0.3)', border: '1px solid rgba(185,28,28,0.5)', borderRadius: '50%', width: '32px', height: '32px', color: '#fca5a5', cursor: 'pointer', fontSize: '18px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                ×
-              </button>
-            </div>
-
-            {/* メタ情報 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
-              {selectedCombo.damage && (
-                <div style={{ background: 'rgba(0,0,0,0.4)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(185,28,28,0.2)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '4px' }}>ダメージ</div>
-                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fbbf24' }}>{selectedCombo.damage}</div>
-                </div>
-              )}
-              {selectedCombo.difficulty && (
-                <div style={{ background: 'rgba(0,0,0,0.4)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(185,28,28,0.2)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '4px' }}>難易度</div>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: getDifficultyColor(selectedCombo.difficulty) }}>
-                    {getDifficultyLabel(selectedCombo.difficulty)}
-                    <span style={{ fontSize: '11px', marginLeft: '4px', color: '#9ca3af' }}>({selectedCombo.difficulty}/5)</span>
-                  </div>
-                </div>
-              )}
-              {selectedCombo.importance && (
-                <div style={{ background: 'rgba(0,0,0,0.4)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(185,28,28,0.2)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '4px' }}>重要度</div>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '2px' }}>
-                    {[1,2,3,4,5].map(s => <span key={s} style={{ fontSize: '16px', color: s <= selectedCombo.importance! ? '#fbbf24' : '#4b5563' }}>★</span>)}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 説明 */}
-            {selectedCombo.description && (
-              <div style={{ marginBottom: '20px', background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(185,28,28,0.2)' }}>
-                <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '6px' }}>説明</div>
-                <div style={{ fontSize: '14px', color: '#e5e7eb', lineHeight: '1.6' }}>{selectedCombo.description}</div>
-              </div>
-            )}
-
-            {/* コンボツリー */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '13px', color: '#fca5a5', fontWeight: 'bold', marginBottom: '12px' }}>コンボツリー</div>
-              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '6px', border: '1px solid rgba(185,28,28,0.2)' }}>
-                {renderModalTree(selectedCombo)}
-              </div>
-            </div>
-
-            {/* 作成日 */}
-            {getComboDate(selectedCombo) && (
-              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '20px' }}>
-                作成: {getComboDate(selectedCombo)}
-              </div>
-            )}
-
-            {/* ボタン */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <Link
-                href={`/combo/edit/${selectedCombo.id}`}
-                style={{ padding: '10px 28px', background: 'rgba(59,130,246,0.3)', border: '2px solid rgba(59,130,246,0.5)', borderRadius: '6px', color: '#60a5fa', fontWeight: 'bold', fontSize: '14px', textDecoration: 'none', display: 'inline-block' }}
-              >
-                編集
-              </Link>
-              <button
-                onClick={() => handleDelete(selectedCombo.id)}
-                style={{ padding: '10px 28px', background: 'rgba(239,68,68,0.3)', border: '2px solid rgba(239,68,68,0.5)', borderRadius: '6px', color: '#fca5a5', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
-              >
-                削除
-              </button>
-              <button
-                onClick={() => { setShowModal(false); setSelectedCombo(null); }}
-                style={{ padding: '10px 28px', background: 'linear-gradient(135deg, #dc2626, #991b1b)', border: 'none', borderRadius: '6px', color: '#ffffff', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
-              >
-                閉じる
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

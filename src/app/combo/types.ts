@@ -1,4 +1,4 @@
-// src/app/combo-maker/types.ts
+// src/app/combo/types.ts
 // コンボメーカー共通の型と関数
 import { parseCommandToElements } from '@/utils/commandIcons';
 

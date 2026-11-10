@@ -1,4 +1,4 @@
-// src/app/combo-maker/ComboMakerEditor.tsx
+// src/app/combo/ComboMakerEditor.tsx
 // コンボメーカー：技リストから選んで一列に並べる作成・編集画面（新規/編集共通）
 'use client';
 
@@ -43,6 +43,7 @@ export interface ComboMakerInitial {
   memo: string;
   steps: ComboStep[];
   counterHit: boolean;
+  damage: number | null;
 }
 
 export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInitial }) {
@@ -59,6 +60,7 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
   const [memo, setMemo] = useState(initial?.memo ?? '');
   const [steps, setSteps] = useState<ComboStep[]>(initial?.steps ?? []);
   const [counterHit, setCounterHit] = useState(initial?.counterHit ?? false);
+  const [damage, setDamage] = useState(initial?.damage != null ? String(initial.damage) : '');
   const [keyword, setKeyword] = useState('');
   const [showStepList, setShowStepList] = useState(true); // 手順リスト（技名ごとの欄）の開閉
 
@@ -155,6 +157,7 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
   const save = async () => {
     if (!characterId) return alert('キャラクターを選択してください');
     if (steps.length === 0) return alert('技を1つ以上追加してください');
+    if (damage.trim() !== '' && !/^\d+$/.test(damage.trim())) return alert('ダメージは0以上の整数で入力してください');
 
     setSaving(true);
     try {
@@ -165,6 +168,7 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
         memo: memo.trim() || undefined,
         steps: JSON.stringify(steps),
         counter_hit: counterHit,
+        damage: damage.trim() === '' ? null : parseInt(damage.trim(), 10), // 空欄なら未設定
       };
       // ComboRecipe は owner 認証のため userPool で保存する
       const { errors } = isEdit
@@ -173,7 +177,7 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
       if (errors?.length) throw errors;
 
       alert('コンボを保存しました');
-      router.push('/combo-maker');
+      router.push('/combo/list');
     } catch (error) {
       console.error('保存エラー:', error);
       alert('保存に失敗しました');
@@ -191,7 +195,7 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
             {isEdit ? 'コンボメーカー（編集）' : 'コンボメーカー'}
           </h1>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <a href="/combo-maker" style={subButtonStyle}>一覧</a>
+            <a href="/combo/list" style={subButtonStyle}>一覧</a>
             <a href="/" style={primaryButtonStyle}>トップ</a>
           </div>
         </div>
@@ -278,6 +282,19 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
                 />
                 カウンターヒット始動
               </label>
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={labelStyle}>ダメージ（任意）</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={1}
+                value={damage}
+                onChange={(e) => setDamage(e.target.value)}
+                placeholder="例: 72"
+                style={{ ...inputStyle, maxWidth: '160px' }}
+              />
             </div>
             <div style={{ marginBottom: '20px' }}>
               <label style={labelStyle}>メモ</label>
