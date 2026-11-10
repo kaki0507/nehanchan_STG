@@ -2,7 +2,7 @@
 // コンボ（技の並び）を「アイコン ▶ アイコン ▶ …」の形で表示する
 'use client';
 
-import CommandDisplay from '@/components/CommandDisplay';
+import { StepView } from './CommandIcons';
 import type { ComboStep } from './types';
 
 export default function ComboSequence({ steps }: { steps: ComboStep[] }) {
@@ -12,10 +12,10 @@ export default function ComboSequence({ steps }: { steps: ComboStep[] }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
       {steps.map((step, i) => (
-        <div key={`${step.moveId}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {i > 0 && <span style={{ color: '#ef4444', fontSize: '12px' }}>▶</span>}
-          <span title={step.moveName}>
-            <CommandDisplay command={step.command || step.moveName} size="sm" />
+          <span title={step.type === 'free' ? '自由入力' : step.moveName}>
+            <StepView step={step} />
           </span>
         </div>
       ))}

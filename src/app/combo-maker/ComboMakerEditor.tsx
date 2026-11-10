@@ -5,10 +5,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { client } from '@/lib/client';
-import CommandDisplay from '@/components/CommandDisplay';
 import ComboSequence from './ComboSequence';
+import FreeInputBuilder from './FreeInputBuilder';
+import { CommandIcons, StepView } from './CommandIcons';
 import {
   type ComboStep,
+  type FreeToken,
   type CharacterOption,
   getCharacterName,
   isSameCharacterId,
@@ -126,7 +128,11 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
   };
 
   const addStep = (move: MoveOption) => {
-    setSteps((prev) => [...prev, { moveId: move.id, moveName: move.move_name, command: move.command ?? '' }]);
+    setSteps((prev) => [...prev, { type: 'move', moveId: move.id, moveName: move.move_name, command: move.command ?? '' }]);
+  };
+
+  const addFreeStep = (tokens: FreeToken[]) => {
+    setSteps((prev) => [...prev, { type: 'free', tokens }]);
   };
 
   const removeStep = (index: number) => {
@@ -207,13 +213,15 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
             <ol style={{ listStyle: 'none', padding: 0, margin: '16px 0 0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {steps.map((step, i) => (
                 <li
-                  key={`${step.moveId}-${i}`}
+                  key={i}
                   style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', background: 'rgba(255,255,255,0.04)', borderRadius: '4px' }}
                 >
                   <span style={{ color: '#9ca3af', fontSize: '12px', width: '24px' }}>{i + 1}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: '#ffffff', fontSize: '13px' }}>{step.moveName}</div>
-                    {step.command && <CommandDisplay command={step.command} size="sm" />}
+                    <div style={{ color: '#ffffff', fontSize: '13px', marginBottom: '2px' }}>
+                      {step.type === 'free' ? '自由入力' : step.moveName}
+                    </div>
+                    {(step.type === 'free' || step.command) && <StepView step={step} />}
                   </div>
                   <button onClick={() => moveStep(i, -1)} disabled={i === 0} style={smallButtonStyle} title="前へ">↑</button>
                   <button onClick={() => moveStep(i, 1)} disabled={i === steps.length - 1} style={smallButtonStyle} title="後ろへ">↓</button>
@@ -272,6 +280,8 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
 
           {/* 右：技リスト */}
           <div style={panelStyle}>
+            <FreeInputBuilder onAdd={addFreeStep} />
+
             <label style={labelStyle}>技リスト（クリックで末尾に追加）</label>
             {!characterId ? (
               <div style={{ color: '#6b7280', fontSize: '14px', padding: '40px 0', textAlign: 'center' }}>
@@ -297,7 +307,7 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
                         style={{ textAlign: 'left', padding: '8px 10px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(185, 28, 28, 0.25)', borderRadius: '4px', cursor: 'pointer' }}
                       >
                         <div style={{ color: '#ffffff', fontSize: '13px', marginBottom: '2px' }}>{m.move_name}</div>
-                        {m.command && <CommandDisplay command={m.command} size="sm" />}
+                        {m.command && <CommandIcons command={m.command} />}
                       </button>
                     ))
                   )}

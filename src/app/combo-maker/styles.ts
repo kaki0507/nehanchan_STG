@@ -15,6 +15,7 @@ export const panelStyle: CSSProperties = {
   border: '2px solid rgba(185, 28, 28, 0.3)',
   borderRadius: '8px',
   padding: '20px',
+  color: '#e5e7eb', // Tailwind未適用のため文字色を明示
 };
 
 export const labelStyle: CSSProperties = {

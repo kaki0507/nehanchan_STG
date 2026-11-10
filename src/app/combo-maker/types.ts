@@ -1,11 +1,24 @@
 // src/app/combo-maker/types.ts
 // コンボメーカー共通の型と関数
 
+// 自由入力の1要素（アイコン or テキスト）
+export type FreeToken =
+  | { kind: 'icon'; code: string }
+  | { kind: 'text'; text: string };
+
+// コンボの1手
+// type 未設定のデータ（初期版で保存したもの）は 'move' として扱う
 export interface ComboStep {
-  moveId: string;   // Move.id
-  moveName: string; // 保存時点の技名
-  command: string;  // 保存時点のコマンド（アイコン表示用）
+  type?: 'move' | 'free';
+  // 技（type: 'move'）
+  moveId?: string;   // Move.id
+  moveName?: string; // 保存時点の技名
+  command?: string;  // 保存時点のコマンド（アイコン表示用）
+  // 自由入力（type: 'free'）
+  tokens?: FreeToken[];
 }
+
+export const isFreeStep = (step: ComboStep) => step.type === 'free';
 
 export interface CharacterOption {
   id: string;
