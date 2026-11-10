@@ -140,6 +140,19 @@ const schema = a.schema({
       allow.publicApiKey().to(['read']), // 開発中のみ
     ]),
 
+  // コンボメーカー（技を一列に並べるシンプルなコンボ・ユーザーごとに管理）
+  ComboRecipe: a
+    .model({
+      character_id: a.string().required(),
+      character_name: a.string(),
+      title: a.string(),
+      memo: a.string(),
+      steps: a.string(), // JSON文字列: [{ moveId, moveName, command }]
+    })
+    .authorization((allow) => [
+      allow.owner(),
+    ]),
+
 });
 
 export type Schema = ClientSchema<typeof schema>;
