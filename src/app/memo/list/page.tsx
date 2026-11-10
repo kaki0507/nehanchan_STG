@@ -358,7 +358,7 @@ export default function MemoListPage() {
           {[
             { label: 'TOP', href: '/', isLink: true },
             { label: '対策メモ', href: '/memo/list', isLink: true },
-            { label: 'コンボ', href: '#', isLink: true }
+            { label: 'コンボ', href: '/combo/list', isLink: true }
           ].map((item, index) => (
             item.isLink ? (
               <a
