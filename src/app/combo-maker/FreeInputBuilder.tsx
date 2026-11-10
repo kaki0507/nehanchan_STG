@@ -17,7 +17,8 @@ const paletteButtonStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  minHeight: '32px',
+  width: '44px',
+  height: '32px',
 };
 
 export default function FreeInputBuilder({ onAdd }: { onAdd: (tokens: FreeToken[]) => void }) {
@@ -100,11 +101,23 @@ export default function FreeInputBuilder({ onAdd }: { onAdd: (tokens: FreeToken[
         {ICON_GROUPS.map((group) => (
           <div key={group.title}>
             <div style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '4px' }}>{group.title}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${group.columns}, minmax(32px, 44px))`, gap: '4px' }}>
-              {group.icons.map((icon) => (
-                <button key={icon.code} onClick={() => addIcon(icon.code)} title={icon.label} style={paletteButtonStyle}>
-                  <Icon code={icon.code} />
-                </button>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+              {group.blocks.map((rows, b) => (
+                <div key={b} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {rows.map((row, r) => (
+                    <div key={r} style={{ display: 'flex', gap: '4px' }}>
+                      {row.map((icon, c) =>
+                        icon ? (
+                          <button key={icon.code} onClick={() => addIcon(icon.code)} title={icon.label} style={paletteButtonStyle}>
+                            <Icon code={icon.code} />
+                          </button>
+                        ) : (
+                          <div key={`empty-${c}`} style={{ width: '44px', height: '32px' }} />
+                        )
+                      )}
+                    </div>
+                  ))}
+                </div>
               ))}
             </div>
           </div>
