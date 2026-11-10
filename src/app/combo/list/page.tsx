@@ -7,6 +7,7 @@ import { client } from '@/lib/client';
 import type { Schema } from '@/amplify/data/resource';
 import ComboSequence from '../ComboSequence';
 import IconPalette from '../IconPalette';
+import SideMenuLayout from '../SideMenuLayout';
 import { Icon } from '../CommandIcons';
 import { type ComboStep, parseSteps, startsWithIcons } from '../types';
 import { pageStyle, containerStyle, panelStyle, inputStyle, labelStyle, primaryButtonStyle, smallButtonStyle } from '../styles';
@@ -132,6 +133,7 @@ export default function ComboMakerListPage() {
 
   return (
     <div style={pageStyle}>
+      <SideMenuLayout>
       <div style={containerStyle}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffffff', letterSpacing: '2px', margin: 0 }}>コンボメーカー</h1>
@@ -231,6 +233,7 @@ export default function ComboMakerListPage() {
           </div>
         )}
       </div>
+      </SideMenuLayout>
     </div>
   );
 }
