@@ -148,6 +148,8 @@ const schema = a.schema({
       title: a.string(),
       memo: a.string(),
       steps: a.string(), // JSON文字列: [{ moveId, moveName, command }]
+      sort_order: a.integer(),
+      counter_hit: a.boolean(), // カウンターヒット始動のコンボか
     })
     .authorization((allow) => [
       allow.owner(),

@@ -42,6 +42,7 @@ export interface ComboMakerInitial {
   title: string;
   memo: string;
   steps: ComboStep[];
+  counterHit: boolean;
 }
 
 export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInitial }) {
@@ -57,6 +58,7 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
   const [title, setTitle] = useState(initial?.title ?? '');
   const [memo, setMemo] = useState(initial?.memo ?? '');
   const [steps, setSteps] = useState<ComboStep[]>(initial?.steps ?? []);
+  const [counterHit, setCounterHit] = useState(initial?.counterHit ?? false);
   const [keyword, setKeyword] = useState('');
   const [showStepList, setShowStepList] = useState(true); // 手順リスト（技名ごとの欄）の開閉
 
@@ -162,6 +164,7 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
         title: title.trim() || undefined,
         memo: memo.trim() || undefined,
         steps: JSON.stringify(steps),
+        counter_hit: counterHit,
       };
       // ComboRecipe は owner 認証のため userPool で保存する
       const { errors } = isEdit
@@ -212,7 +215,7 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
             )}
           </div>
 
-          <ComboSequence steps={steps} />
+          <ComboSequence steps={steps} counterHit={counterHit} />
 
           {/* 並べ替え・削除 */}
           {steps.length > 0 && showStepList && (
@@ -264,6 +267,17 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
                 placeholder="例: 右アッパー始動 壁なし"
                 style={inputStyle}
               />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#fca5a5', fontSize: '14px', fontWeight: 'bold' }}>
+                <input
+                  type="checkbox"
+                  checked={counterHit}
+                  onChange={(e) => setCounterHit(e.target.checked)}
+                  style={{ width: '18px', height: '18px', accentColor: '#dc2626', cursor: 'pointer' }}
+                />
+                カウンターヒット始動
+              </label>
             </div>
             <div style={{ marginBottom: '20px' }}>
               <label style={labelStyle}>メモ</label>

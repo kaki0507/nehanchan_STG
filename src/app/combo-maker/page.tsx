@@ -19,6 +19,7 @@ interface ComboRow {
   memo: string;
   steps: ComboStep[];
   sort_order: number | null;
+  counter_hit: boolean;
   createdAt: string;
 }
 
@@ -55,6 +56,7 @@ export default function ComboMakerListPage() {
             memo: c.memo ?? '',
             steps: parseSteps(c.steps),
             sort_order: c.sort_order ?? null,
+            counter_hit: c.counter_hit ?? false,
             createdAt: c.createdAt,
           }))
         );
@@ -213,7 +215,7 @@ export default function ComboMakerListPage() {
                     <button onClick={() => remove(combo)} style={{ ...smallButtonStyle, color: '#fca5a5' }}>削除</button>
                   </div>
                 </div>
-                <ComboSequence steps={combo.steps} />
+                <ComboSequence steps={combo.steps} counterHit={combo.counter_hit} />
                 {combo.memo && (
                   <p style={{ color: '#9ca3af', fontSize: '13px', margin: '10px 0 0', whiteSpace: 'pre-wrap' }}>{combo.memo}</p>
                 )}

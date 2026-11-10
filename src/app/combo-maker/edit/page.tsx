@@ -32,6 +32,7 @@ function EditContent() {
           title: data.title ?? '',
           memo: data.memo ?? '',
           steps: parseSteps(data.steps),
+          counterHit: data.counter_hit ?? false,
         });
       } catch (error) {
         console.error('取得エラー:', error);
