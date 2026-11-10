@@ -85,9 +85,13 @@ export default function ComboMakerListPage() {
     return Array.from(map.entries()).sort((a, b) => a[0].padStart(3, '0').localeCompare(b[0].padStart(3, '0')));
   }, [combos]);
 
-  const visible = combos.filter(
+  // 最初のコマンドで絞り込んでいるときは、コンボのパーツ数（手数）の少ない順に並べる
+  // （同じ手数どうしは保存済みの並び順のまま）
+  const sortByStepCount = commandPrefix.length > 0;
+  const filtered = combos.filter(
     (c) => (!characterFilter || c.character_id === characterFilter) && startsWithIcons(c.steps, commandPrefix)
   );
+  const visible = sortByStepCount ? [...filtered].sort((a, b) => a.steps.length - b.steps.length) : filtered;
 
   // 表示中の一覧で隣のコンボと入れ替え、全体の並び順を振り直して保存する
   const moveCombo = async (combo: ComboRow, direction: -1 | 1) => {
@@ -194,6 +198,7 @@ export default function ComboMakerListPage() {
         {!loading && (
           <div style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '10px' }}>
             {visible.length}件{visible.length !== combos.length && ` / 全${combos.length}件`}
+            {sortByStepCount && '（パーツ数の少ない順・この間は↑↓での並び替え不可）'}
           </div>
         )}
 
@@ -211,6 +216,7 @@ export default function ComboMakerListPage() {
                   <div>
                     <span style={{ color: '#fca5a5', fontSize: '12px', marginRight: '10px' }}>{combo.character_name}</span>
                     <span style={{ color: '#ffffff', fontSize: '16px', fontWeight: 'bold' }}>{combo.title || '無題のコンボ'}</span>
+                    <span style={{ marginLeft: '10px', color: '#9ca3af', fontSize: '12px' }}>{combo.steps.length}パーツ</span>
                     {combo.damage != null && (
                       <span style={{ marginLeft: '10px', padding: '2px 8px', background: 'rgba(251, 191, 36, 0.15)', border: '1px solid rgba(251, 191, 36, 0.5)', borderRadius: '4px', color: '#fbbf24', fontSize: '12px', fontWeight: 'bold' }}>
                         {combo.damage}ダメージ
@@ -218,8 +224,8 @@ export default function ComboMakerListPage() {
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    <button onClick={() => moveCombo(combo, -1)} disabled={reordering || index === 0} style={smallButtonStyle} title="上へ">↑</button>
-                    <button onClick={() => moveCombo(combo, 1)} disabled={reordering || index === visible.length - 1} style={smallButtonStyle} title="下へ">↓</button>
+                    <button onClick={() => moveCombo(combo, -1)} disabled={reordering || sortByStepCount || index === 0} style={smallButtonStyle} title={sortByStepCount ? '最初のコマンドで絞り込み中は並び替えできません' : '上へ'}>↑</button>
+                    <button onClick={() => moveCombo(combo, 1)} disabled={reordering || sortByStepCount || index === visible.length - 1} style={smallButtonStyle} title={sortByStepCount ? '最初のコマンドで絞り込み中は並び替えできません' : '下へ'}>↓</button>
                     <a href={`/combo/edit?id=${combo.id}`} style={{ ...smallButtonStyle, textDecoration: 'none', color: '#60a5fa' }}>編集</a>
                     <button onClick={() => remove(combo)} style={{ ...smallButtonStyle, color: '#fca5a5' }}>削除</button>
                   </div>
