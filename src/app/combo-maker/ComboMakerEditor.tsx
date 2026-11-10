@@ -58,6 +58,7 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
   const [memo, setMemo] = useState(initial?.memo ?? '');
   const [steps, setSteps] = useState<ComboStep[]>(initial?.steps ?? []);
   const [keyword, setKeyword] = useState('');
+  const [showStepList, setShowStepList] = useState(true); // 手順リスト（技名ごとの欄）の開閉
 
   // キャラクター・技マスタの取得
   useEffect(() => {
@@ -197,19 +198,24 @@ export default function ComboMakerEditor({ initial }: { initial?: ComboMakerInit
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <span style={{ ...labelStyle, marginBottom: 0 }}>コンボ（{steps.length}手）</span>
             {steps.length > 0 && (
-              <button
-                onClick={() => confirm('並べた技をすべてクリアしますか？') && setSteps([])}
-                style={smallButtonStyle}
-              >
-                クリア
-              </button>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button onClick={() => setShowStepList((v) => !v)} style={smallButtonStyle}>
+                  {showStepList ? '▲ 手順を閉じる' : '▼ 手順を開く'}
+                </button>
+                <button
+                  onClick={() => confirm('並べた技をすべてクリアしますか？') && setSteps([])}
+                  style={smallButtonStyle}
+                >
+                  クリア
+                </button>
+              </div>
             )}
           </div>
 
           <ComboSequence steps={steps} />
 
           {/* 並べ替え・削除 */}
-          {steps.length > 0 && (
+          {steps.length > 0 && showStepList && (
             <ol style={{ listStyle: 'none', padding: 0, margin: '16px 0 0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {steps.map((step, i) => (
                 <li
