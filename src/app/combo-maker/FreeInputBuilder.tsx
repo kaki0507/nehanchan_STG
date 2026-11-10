@@ -4,22 +4,9 @@
 
 import { useRef, useState } from 'react';
 import { Icon, TEXT_COLOR } from './CommandIcons';
-import { ICON_GROUPS } from './iconPalette';
+import IconPalette from './IconPalette';
 import type { FreeToken } from './types';
 import { inputStyle, labelStyle, smallButtonStyle } from './styles';
-
-const paletteButtonStyle = {
-  padding: '4px',
-  background: 'rgba(0, 0, 0, 0.6)',
-  border: '1px solid rgba(185, 28, 28, 0.4)',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '44px',
-  height: '32px',
-};
 
 export default function FreeInputBuilder({ onAdd }: { onAdd: (tokens: FreeToken[]) => void }) {
   const [tokens, setTokens] = useState<FreeToken[]>([]);
@@ -97,31 +84,8 @@ export default function FreeInputBuilder({ onAdd }: { onAdd: (tokens: FreeToken[
       </div>
 
       {/* アイコン・テキスト選択 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
-        {ICON_GROUPS.map((group) => (
-          <div key={group.title}>
-            <div style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '4px' }}>{group.title}</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-              {group.blocks.map((rows, b) => (
-                <div key={b} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {rows.map((row, r) => (
-                    <div key={r} style={{ display: 'flex', gap: '4px' }}>
-                      {row.map((icon, c) =>
-                        icon ? (
-                          <button key={icon.code} onClick={() => addIcon(icon.code)} title={icon.label} style={paletteButtonStyle}>
-                            <Icon code={icon.code} />
-                          </button>
-                        ) : (
-                          <div key={`empty-${c}`} style={{ width: '44px', height: '32px' }} />
-                        )
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+      <div style={{ marginBottom: '12px' }}>
+        <IconPalette onSelect={addIcon} />
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>

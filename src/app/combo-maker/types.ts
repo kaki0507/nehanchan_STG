@@ -1,5 +1,6 @@
 // src/app/combo-maker/types.ts
 // コンボメーカー共通の型と関数
+import { parseCommandToElements } from '@/utils/commandIcons';
 
 // 自由入力の1要素（アイコン or テキスト）
 export type FreeToken =
@@ -34,6 +35,21 @@ export const getCharacterName = (c: CharacterOption) =>
 // character_id の表記ゆれ（"10" と "010" など）を吸収して比較する
 export const isSameCharacterId = (a: string, b: string) =>
   String(a).trim().padStart(3, '0') === String(b).trim().padStart(3, '0');
+
+// コンボ全体のアイコンの並び（テキストは除く）。例: ["fo", "lk", "rp", ...]
+export const getComboIconCodes = (steps: ComboStep[]): string[] =>
+  steps.flatMap((step) =>
+    step.type === 'free'
+      ? (step.tokens ?? []).flatMap((t) => (t.kind === 'icon' ? [t.code.toLowerCase()] : []))
+      : parseCommandToElements(step.command).flatMap((el) => (el.type === 'icon' ? [el.value.toLowerCase()] : []))
+  );
+
+// コンボが指定したアイコンの並びで始まるか（prefix が空なら常に true）
+export const startsWithIcons = (steps: ComboStep[], prefix: string[]) => {
+  if (prefix.length === 0) return true;
+  const codes = getComboIconCodes(steps);
+  return prefix.every((code, i) => codes[i] === code.toLowerCase());
+};
 
 // DBのJSON文字列を安全に配列へ変換する
 export const parseSteps = (json?: string | null): ComboStep[] => {
